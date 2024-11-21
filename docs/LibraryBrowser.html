@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Library Browser Online</title><meta charset="utf-8" />
+<link rel="stylesheet" type="text/css" href="../tracker/css/library.css" />
+<script src="compadre.js"></script>
+<script src="swingjs/swingjs2.js"></script>
+<script>
+if (!self.SwingJS)alert('swingjs2.js was not found. It needs to be in swingjs folder in the same directory as ' + document.location.href)
+Info = {
+  code: null,
+  main: "org.opensourcephysics.tools.LibraryBrowser",
+  core: "_tracker",
+  assets: { name: "tracker", zipPath: "tracker-assets.zip", classPaths: ["org/opensourcephysics"] },
+  resourceZip: "misc-assets.zip",
+  width: 850,
+  height: 550,
+  readyFunction: null,
+	j2sPath: 'swingjs/j2s',
+}
+</script>
+
+<script>
+  var libURL = href="https://physlets.org/tracker/trackerJS/LibraryBrowser.html?j2sargs=";
+  function openDL(originalUrl){
+    encodedUrl = encodeURIComponent(originalUrl);
+    window.open(libURL+encodedUrl, '_self');
+  }
+</script>
+
+</head>
+<body>
+<script>
+SwingJS.getApplet('testApplet', Info)
+</script>
+<h2>Digital Library Browser Online</h2>
+
+<p>The OSP Digital Library Browser enables you to browse, organize and access collections of digital library resources, 
+  such as EJS models and Tracker experiments. Users can build their own Collections using Java version of the Library Browser in desktop Tracker. </p>
+
+  <ul>
+    <li><a href="#" onclick="openDL('https://opensourcephysics.github.io/resources/CollectionTest/CollectionTest.xml')">DL File Test</a></li>
+  </ul>
+</body>
+</html>
