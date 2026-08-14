@@ -12608,12 +12608,18 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var isTouch = isTouchEvent(ev);
 		// A physical trackpad press reaches us as mousedown, whereas a touch
 		// screen uses pointerdown/touchstart. Both primary-button gestures can
-		// become a three-second context press; button 3 remains the native popup.
+		// become a two-second context press; button 3 remains the native popup.
 		if (!isTouch && (ev.type != "mousedown" || ev.button != 0))
 			return null;
 		var state = who._touchContext;
 		var point = getRawEventPoint(ev);
 		if (!state) {
+			// A new canvas contact is also an explicit click outside any open
+			// context menu. Do this before dispatching the Java press because menu
+			// overlays can otherwise retain capture on mobile Safari.
+			var role = ev.target && ev.target.getAttribute && ev.target.getAttribute("role");
+			if (!role && J2S.Swing && J2S.Swing.hideMenus)
+				J2S.Swing.hideMenus(who.applet);
 			state = who._touchContext = {
 				point: point,
 				target: ev.target,
@@ -12625,7 +12631,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			state.timer = setTimeout(function() {
 				if (who._touchContext === state)
 					fireTouchContextMenu(who, state);
-			}, 3000);
+			}, 2000);
 		}
 		var oe = ev.originalEvent || ev;
 		if (isTouchPointerEvent(ev) && oe.pointerId != null)
