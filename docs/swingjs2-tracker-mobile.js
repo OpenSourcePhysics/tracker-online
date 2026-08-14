@@ -12453,7 +12453,17 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 	var isTouchPointerEvent = function(ev) {
 		var oe = ev.originalEvent || ev;
 		return ev.type == "pointerdown" || ev.type == "pointerup" ?
-			(oe.pointerType == "touch" || ev.pointerType == "touch") : false;
+			(oe.pointerType == "touch" || oe.pointerType == "pen" ||
+				ev.pointerType == "touch" || ev.pointerType == "pen") : false;
+	};
+
+	var isCompatibilityMouseEvent = function(ev) {
+		var oe = ev.originalEvent || ev;
+		return !!(oe.sourceCapabilities && oe.sourceCapabilities.firesTouchEvents) ||
+			(!!J2S._lastTouchPointerDown &&
+				Date.now() - J2S._lastTouchPointerDown.time < 800) ||
+			(!!J2S._lastTouchPointerUp &&
+				Date.now() - J2S._lastTouchPointerUp < 800);
 	};
 
 	var getRawEventPoint = function(ev) {
@@ -12470,7 +12480,8 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	J2S.$bind('body', //'pointerdown pointermove 
 		'mousedown mousemove mouseup', function(ev) {
-		J2S._haveMouse = true;
+		if (!isCompatibilityMouseEvent(ev))
+			J2S._haveMouse = true;
 	});
 	
 	J2S.$bind('body', //'pointerup 
@@ -12559,8 +12570,9 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		// otherwise, if J2S._firstTouch is undefined (!!x != x), set J2S._firstTouch
 		// and ignore future touch events (through the first touchend):
 		
-		if (//ev.type == "pointerdown" || 
-			ev.type == "mousedown") {// BHTEst
+		if (ev.type == "mousedown") {// BHTEst
+			if (isCompatibilityMouseEvent(ev))
+				return true;
 		    J2S._haveMouse = true;
 		} else { 
 		    if (J2S._haveMouse) return;
@@ -12657,6 +12669,8 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		}
 		if (!who || who.applet == null)
 			return;
+		if (ev.type == "mouseup" && isCompatibilityMouseEvent(ev))
+			return true;
 		if (ev.type == "touchend" && J2S._lastTouchPointerUp &&
 			Date.now() - J2S._lastTouchPointerUp < 500) {
 			// pointerup already completed this tap. Ignore the matching legacy
