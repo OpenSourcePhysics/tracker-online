@@ -12612,6 +12612,14 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		if (!isTouch && (ev.type != "mousedown" || ev.button != 0))
 			return null;
 		var state = who._touchContext;
+		var isNewPress = ev.type == "pointerdown" || ev.type == "touchstart" ||
+			ev.type == "mousedown";
+		// Mobile Safari may omit the release after a context hold. Never let that
+		// completed gesture swallow the next real press on the same canvas/control.
+		if (state && state.triggered && isNewPress) {
+			clearTouchContext(who);
+			state = null;
+		}
 		var point = getRawEventPoint(ev);
 		if (!state) {
 			// A new canvas contact is also an explicit click outside any open
@@ -12886,9 +12894,15 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				J2S._dmouseOwner = null;
 			}
 		}
+		// A pressed toolbar button can repaint and replace its DOM node before
+		// pointerup. The body-level release then arrives without a bound `who`;
+		// route it to the component that owned the original press.
+		var orphanedRelease = !who && J2S._mouseOwner;
+		if (orphanedRelease)
+			who = J2S._mouseOwner;
 		if (!who || who.applet == null)
 			return;
-		if (ev.type == "mouseup" && isCompatibilityMouseEvent(ev))
+		if (!orphanedRelease && ev.type == "mouseup" && isCompatibilityMouseEvent(ev))
 			return true;
 		if (who._suppressContextMouseUp && ev.type == "mouseup" && ev.button == 0) {
 			who._suppressContextMouseUp = false;
