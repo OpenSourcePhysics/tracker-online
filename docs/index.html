@@ -16,22 +16,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="../css/tracker_home.css" rel="stylesheet" type="text/css">
 	<!-- <link rel="stylesheet" type="text/css" href="physletsJS.css" /> -->
-	<style>
-		[id^="Tracker_FrameUI_"][id$="_frame"] {
-			touch-action: none;
-		}
-
-		/* Keep the video slider thumb visible when iPad layout briefly gives the
-		   em-sized SwingJS handle zero geometry while a video is loading. */
-		[id^="Tracker_SliderUI_"] .ui-j2sslider-handle {
-			display: block !important;
-			visibility: visible !important;
-			opacity: 1 !important;
-			min-width: 14px;
-			min-height: 14px;
-			z-index: 2;
-		}
-	</style>
+	<link rel="stylesheet" type="text/css" href="ipad.css" />
 	<script src="compadre.js"></script>
 	<script src="swingjs2-tracker-mobile.js?v=20260815-ipad-touch1"></script>
 	<script>
