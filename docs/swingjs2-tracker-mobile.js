@@ -22741,3 +22741,38 @@ if (typeof(SwingJS) == "undefined") {
 })(SwingJS, jQuery, J2S);
 
 } // SwingJS undefined
+
+/* Tracker Mobile: a raw asynchronous video can dispose the SwingJS slider
+ * widget after its replacement track has been added. Rebuild that UI when a
+ * Tracker slider wrapper is left with a bare track and no jQuery slider data.
+ */
+(function () {
+	if (typeof MutationObserver == "undefined") return;
+	var repairPending = false;
+	function repairTrackerSliders() {
+		repairPending = false;
+		var wraps = document.querySelectorAll('[id^="Tracker_SliderUI_"][id$="_wrapdiv"]');
+		for (var i = 0; i < wraps.length; i++) {
+			var wrap = wraps[i];
+			var track = wrap.lastElementChild;
+			if (!track || track.querySelector('.ui-j2sslider-handle')
+					|| (self.jQuery && jQuery.data(track, "ui-j2sslider"))) continue;
+			var slider = wrap["data-component"];
+			var ui = slider && (slider.getUI$ ? slider.getUI$() : slider.ui);
+			if (!ui || !ui.updateDOMNode$ || track._trackerSliderRepairing
+					|| (wrap._trackerSliderRepairCount || 0) >= 2) continue;
+			track._trackerSliderRepairing = true;
+			wrap._trackerSliderRepairCount = (wrap._trackerSliderRepairCount || 0) + 1;
+			ui.sliderDisposed = true;
+			ui.updateDOMNode$();
+		}
+	}
+	function scheduleRepair() {
+		if (repairPending) return;
+		repairPending = true;
+		setTimeout(repairTrackerSliders, 0);
+	}
+	new MutationObserver(scheduleRepair).observe(document.documentElement,
+			{ childList: true, subtree: true });
+	setTimeout(repairTrackerSliders, 0);
+})();
