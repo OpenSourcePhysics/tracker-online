@@ -14400,6 +14400,14 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		// the default touch action iPadOS may take over the drag for page panning.
 		// Enlarge the invisible target inward and reserve the gesture for resizing.
 		var isResizer = (" " + tag.className + " ").indexOf(" swingjs-resizer ") >= 0;
+		var isSliderHandle = (" " + tag.className + " ").indexOf(" ui-j2sslider-handle ") >= 0;
+		if (isSliderHandle) {
+			$tag.css({
+				"touch-action" : "none",
+				"user-select" : "none",
+				"-webkit-user-select" : "none"
+			});
+		}
 		if (isResizer) {
 			$tag.css({
 				"width" : "28px",
@@ -14416,7 +14424,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 		var down = function(ev) {
 			var ev0 = ev.originalEvent || ev;
-			if (isResizer && ev0.pointerId != null && tag.setPointerCapture) {
+			if ((isResizer || isSliderHandle) && ev0.pointerId != null && tag.setPointerCapture) {
 				try {
 					tag.setPointerCapture(ev0.pointerId);
 				} catch (e) {}
@@ -14475,7 +14483,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			}
 		}, up = function(ev) {
 			var ev0 = ev.originalEvent || ev;
-			if (isResizer && ev0.pointerId != null && tag.releasePointerCapture) {
+			if ((isResizer || isSliderHandle) && ev0.pointerId != null && tag.releasePointerCapture) {
 				try {
 					tag.releasePointerCapture(ev0.pointerId);
 				} catch (e) {}
@@ -14508,15 +14516,16 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			return ev;
 		}
 
-		$tag.bind('pointerdown mousedown touchstart', function(ev) {
+		var useSliderPointerEvents = isSliderHandle && self.PointerEvent;
+		$tag.bind(useSliderPointerEvents ? 'pointerdown' : 'pointerdown mousedown touchstart', function(ev) {
 			return down && down(fixTouch(ev));
 		});
 
-		$tag.bind('pointermove mousemove touchmove', function(ev) {
+		$tag.bind(useSliderPointerEvents ? 'pointermove' : 'pointermove mousemove touchmove', function(ev) {
 			return drag && drag(fixTouch(ev));
 		});
 
-		$tag.bind('pointerup pointercancel mouseup touchend touchcancel', function(ev) {
+		$tag.bind(useSliderPointerEvents ? 'pointerup pointercancel' : 'pointerup pointercancel mouseup touchend touchcancel', function(ev) {
 			// touchend does not express a position, and we don't use it anyway
 			return up && up(ev);
 		});
