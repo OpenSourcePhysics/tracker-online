@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260827-touch10",
+			version: "20260831-run11",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -12758,8 +12758,11 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			J2S._haveMouse = true;
 	});
 	
-	J2S.$bind('body', //'pointerup 
-		'mouseup touchend', function(ev) {
+	// A Swing button may repaint and replace its DOM node between press and
+	// release. Listen on the body for pointer releases as well so mouseUp() can
+	// route an orphaned iPad release to the component that owns the press.
+	J2S.$bind('body',
+		'pointerup pointercancel mouseup touchend touchcancel', function(ev) {
 		mouseUp(null, ev);
 		return true;
 	});
