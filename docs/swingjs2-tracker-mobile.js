@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260831-run11",
+			version: "20260901-resize12",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14586,16 +14586,19 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			return ev;
 		}
 
-		var useSliderPointerEvents = isSliderHandle && self.PointerEvent;
-		$tag.bind(useSliderPointerEvents ? 'pointerdown' : 'pointerdown mousedown touchstart', function(ev) {
+		// Avoid handling the same physical slider/resizer gesture as pointer,
+		// compatibility mouse, and touch events. Frame resizing is expensive and
+		// duplicate move streams can overwhelm the Swing layout path on an iPad.
+		var usePointerEvents = (isSliderHandle || isResizer) && self.PointerEvent;
+		$tag.bind(usePointerEvents ? 'pointerdown' : 'pointerdown mousedown touchstart', function(ev) {
 			return down && down(fixTouch(ev));
 		});
 
-		$tag.bind(useSliderPointerEvents ? 'pointermove' : 'pointermove mousemove touchmove', function(ev) {
+		$tag.bind(usePointerEvents ? 'pointermove' : 'pointermove mousemove touchmove', function(ev) {
 			return drag && drag(fixTouch(ev));
 		});
 
-		$tag.bind(useSliderPointerEvents ? 'pointerup pointercancel' : 'pointerup pointercancel mouseup touchend touchcancel', function(ev) {
+		$tag.bind(usePointerEvents ? 'pointerup pointercancel' : 'pointerup pointercancel mouseup touchend touchcancel', function(ev) {
 			// touchend does not express a position, and we don't use it anyway
 			return up && up(ev);
 		});
