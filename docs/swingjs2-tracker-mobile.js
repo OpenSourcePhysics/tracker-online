@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260901-resize17",
+			version: "20260901-resize19",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14488,10 +14488,39 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 		var x, y, dx, dy, pageX0, pageY0, pageX, pageY, dragPointerType;
 
+		var finishTouchResize = function(xye) {
+			var root = tag.parentNode;
+			var frame = root && root.ui && root.ui.jc;
+			if (!frame || !frame.getBounds$ || !frame.setSize$II)
+				return false;
+			var bounds = frame.getBounds$();
+			var width = Math.max(10, bounds.width + xye.dx);
+			var height = Math.max(10, bounds.height + xye.dy);
+			var rubberBand = tag.nextSibling;
+			$tag.css("background-color", "red");
+			if (rubberBand) {
+				$(rubberBand).hide().css({ width : width + "px", height : height + "px" });
+			}
+			document.body.style.cursor = "auto";
+			// Resizer normally sets a preferred size, invalidates the full tree, and
+			// packs the window. That pack cycle does not terminate reliably on iPad.
+			// Set the requested size directly and perform one ordinary layout pass.
+			frame.setSize$II(width, height);
+			frame.validate$ && frame.validate$();
+			frame.repaint$ && frame.repaint$();
+			$tag.css({ left : (width - 4) + "px", top : (height - 4) + "px" });
+			return true;
+		};
+
 		var down = function(ev) {
 			var ev0 = ev.originalEvent || ev;
-			dragPointerType = ev0.pointerType
+			var pointerType = ev0.pointerType
 					|| (ev0.targetTouches ? "touch" : "mouse");
+			// Once a direct-manipulation event identifies this gesture as touch or
+			// Pencil, do not let WebKit's following compatibility mouse event change
+			// the release path back to the hanging JFrame pack implementation.
+			if (!dragPointerType || pointerType == "touch" || pointerType == "pen")
+				dragPointerType = pointerType;
 			if ((isResizer || isSliderHandle) && ev0.pointerId != null && tag.setPointerCapture) {
 				try {
 					tag.setPointerCapture(ev0.pointerId);
@@ -14575,10 +14604,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				};
 				if (fUp && isResizer
 						&& (dragPointerType == "touch" || dragPointerType == "pen")) {
-					// Do not run JFrame.invalidateTree()/repackContainer() inside
-					// Mobile Safari's pointerup dispatch. Completing pointer cleanup
-					// first avoids a WebKit/Swing layout re-entrancy freeze on iPad.
-					setTimeout(function() { fUp(xye, 502); }, 0);
+					setTimeout(function() { finishTouchResize(xye); }, 0);
 				} else {
 					fUp && fUp(xye, 502);
 				}
@@ -14598,16 +14624,16 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			return ev;
 		}
 
-		var useSliderPointerEvents = isSliderHandle && self.PointerEvent;
-		$tag.bind(useSliderPointerEvents ? 'pointerdown' : 'pointerdown mousedown touchstart', function(ev) {
+		var usePointerEvents = (isSliderHandle || isResizer) && self.PointerEvent;
+		$tag.bind(usePointerEvents ? 'pointerdown' : 'pointerdown mousedown touchstart', function(ev) {
 			return down && down(fixTouch(ev));
 		});
 
-		$tag.bind(useSliderPointerEvents ? 'pointermove' : 'pointermove mousemove touchmove', function(ev) {
+		$tag.bind(usePointerEvents ? 'pointermove' : 'pointermove mousemove touchmove', function(ev) {
 			return drag && drag(fixTouch(ev));
 		});
 
-		$tag.bind(useSliderPointerEvents ? 'pointerup pointercancel' : 'pointerup pointercancel mouseup touchend touchcancel', function(ev) {
+		$tag.bind(usePointerEvents ? 'pointerup pointercancel' : 'pointerup pointercancel mouseup touchend touchcancel', function(ev) {
 			// touchend does not express a position, and we don't use it anyway
 			return up && up(ev);
 		});
