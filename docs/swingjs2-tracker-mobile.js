@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260901-resize21",
+			version: "20260901-resize22",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14489,11 +14489,22 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		}
 
 		var x, y, dx, dy, pageX0, pageY0, pageX, pageY, dragPointerType;
+		var capturedRelease = null;
+
+		var removeCapturedRelease = function() {
+			if (!capturedRelease)
+				return;
+			document.removeEventListener("pointerup", capturedRelease, true);
+			document.removeEventListener("pointercancel", capturedRelease, true);
+			document.removeEventListener("touchend", capturedRelease, true);
+			document.removeEventListener("touchcancel", capturedRelease, true);
+			capturedRelease = null;
+		};
 
 		var finishTouchResize = function(xye) {
 			var root = tag.parentNode;
 			var frame = root && root.ui && root.ui.jc;
-			J2S._trackerResizeStatus = { version : "20260901-resize21", stage : "commit-start" };
+			J2S._trackerResizeStatus = { version : "20260901-resize22", stage : "commit-start" };
 			if (!frame || !frame.getBounds$ || !frame.setSize$II) {
 				J2S._trackerResizeStatus.stage = "frame-unavailable";
 				return false;
@@ -14502,7 +14513,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			var width = Math.max(10, bounds.width + xye.dx);
 			var height = Math.max(10, bounds.height + xye.dy);
 			J2S._trackerResizeStatus = {
-				version : "20260901-resize21", stage : "before-set-size",
+				version : "20260901-resize22", stage : "before-set-size",
 				width : width, height : height, dx : xye.dx, dy : xye.dy
 			};
 			var rubberBand = tag.nextSibling;
@@ -14523,8 +14534,22 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 		var down = function(ev) {
 			var ev0 = ev.originalEvent || ev;
-			if (isIPadResizer)
-				J2S._trackerResizeStatus = { version : "20260901-resize21", stage : "pointer-down" };
+			if (isIPadResizer) {
+				J2S._trackerResizeStatus = { version : "20260901-resize22", stage : "pointer-down" };
+				removeCapturedRelease();
+				capturedRelease = function(releaseEvent) {
+					if (J2S._dmouseOwner != tag || !tag.isDragging)
+						return;
+					J2S._trackerResizeStatus.stage = "release-captured";
+					up(releaseEvent);
+					releaseEvent.preventDefault && releaseEvent.preventDefault();
+					releaseEvent.stopPropagation && releaseEvent.stopPropagation();
+				};
+				document.addEventListener("pointerup", capturedRelease, true);
+				document.addEventListener("pointercancel", capturedRelease, true);
+				document.addEventListener("touchend", capturedRelease, true);
+				document.addEventListener("touchcancel", capturedRelease, true);
+			}
 			var pointerType = ev0.pointerType
 					|| (ev0.targetTouches ? "touch" : "mouse");
 			// Once a direct-manipulation event identifies this gesture as touch or
@@ -14594,6 +14619,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				}
 			}
 		}, up = function(ev) {
+			removeCapturedRelease();
 			var ev0 = ev.originalEvent || ev;
 			if ((isResizer || isSliderHandle) && ev0.pointerId != null && tag.releasePointerCapture) {
 				try {
