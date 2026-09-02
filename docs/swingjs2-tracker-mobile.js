@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260901-resize26",
+			version: "20260901-resize27",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14517,8 +14517,9 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var finishTouchResize = function(xye) {
 			var root = tag.parentNode;
 			var frame = resizeFrame || findResizeFrame(root);
-			J2S._trackerResizeStatus = { version : "20260901-resize26", stage : "commit-start" };
-			if (!frame || !frame.getBounds$ || !frame.setSize$II) {
+			J2S._trackerResizeStatus = { version : "20260901-resize27", stage : "commit-start" };
+			if (!frame || !frame.getBounds$
+					|| !(frame.setSize$II || frame[setBoundsMethod])) {
 				J2S._trackerResizeStatus.stage = "frame-unavailable";
 				return false;
 			}
@@ -14526,7 +14527,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			var width = Math.max(10, bounds.width + xye.dx);
 			var height = Math.max(10, bounds.height + xye.dy);
 			J2S._trackerResizeStatus = {
-				version : "20260901-resize26", stage : "before-set-size",
+				version : "20260901-resize27", stage : "before-set-size",
 				width : width, height : height, dx : xye.dx, dy : xye.dy
 			};
 			var rubberBand = tag.nextSibling;
@@ -14554,7 +14555,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			if (isIPadResizer) {
 				resizeFrame = findResizeFrame(tag.parentNode);
 				J2S._trackerResizeStatus = {
-					version : "20260901-resize26", stage : "pointer-down",
+					version : "20260901-resize27", stage : "pointer-down",
 					frameFound : !!resizeFrame
 				};
 				removeCapturedRelease();
@@ -14656,7 +14657,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 					x = pageX0 + dx;
 					y = pageY0 + dy;
 					J2S._trackerResizeStatus = {
-						version : "20260901-resize26", stage : "release-position",
+						version : "20260901-resize27", stage : "release-position",
 						dx : dx, dy : dy
 					};
 				}
