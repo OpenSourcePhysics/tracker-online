@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260901-resize24",
+			version: "20260901-resize25",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14504,15 +14504,17 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var finishTouchResize = function(xye) {
 			var root = tag.parentNode;
 			var frame = null;
+			var setBoundsMethod = "setBounds$I$I$I$I";
 			for (var node = root; node && node != document.body; node = node.parentNode) {
 				var ui = node.ui || node["data-ui"];
 				var component = ui && ui.jc || node["data-component"];
-				if (component && component.getBounds$ && component.setSize$II) {
+				if (component && component.getBounds$
+						&& (component.setSize$II || component[setBoundsMethod])) {
 					frame = component;
 					break;
 				}
 			}
-			J2S._trackerResizeStatus = { version : "20260901-resize24", stage : "commit-start" };
+			J2S._trackerResizeStatus = { version : "20260901-resize25", stage : "commit-start" };
 			if (!frame || !frame.getBounds$ || !frame.setSize$II) {
 				J2S._trackerResizeStatus.stage = "frame-unavailable";
 				return false;
@@ -14521,7 +14523,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			var width = Math.max(10, bounds.width + xye.dx);
 			var height = Math.max(10, bounds.height + xye.dy);
 			J2S._trackerResizeStatus = {
-				version : "20260901-resize24", stage : "before-set-size",
+				version : "20260901-resize25", stage : "before-set-size",
 				width : width, height : height, dx : xye.dx, dy : xye.dy
 			};
 			var rubberBand = tag.nextSibling;
@@ -14533,7 +14535,10 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			// Resizer normally sets a preferred size, invalidates the full tree, and
 			// packs the window. That pack cycle does not terminate reliably on iPad.
 			// setSize updates the top-level peer; avoid another validation cycle.
-			frame.setSize$II(width, height);
+			if (frame.setSize$II)
+				frame.setSize$II(width, height);
+			else
+				frame[setBoundsMethod](bounds.x, bounds.y, width, height);
 			J2S._trackerResizeStatus.stage = "after-set-size";
 			$tag.css({ left : (width - 4) + "px", top : (height - 4) + "px" });
 			J2S._trackerResizeStatus.stage = "commit-complete";
@@ -14543,7 +14548,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var down = function(ev) {
 			var ev0 = ev.originalEvent || ev;
 			if (isIPadResizer) {
-				J2S._trackerResizeStatus = { version : "20260901-resize24", stage : "pointer-down" };
+				J2S._trackerResizeStatus = { version : "20260901-resize25", stage : "pointer-down" };
 				removeCapturedRelease();
 				capturedRelease = function(releaseEvent) {
 					if (J2S._dmouseOwner != tag || !tag.isDragging)
@@ -14643,7 +14648,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 					x = pageX0 + dx;
 					y = pageY0 + dy;
 					J2S._trackerResizeStatus = {
-						version : "20260901-resize24", stage : "release-position",
+						version : "20260901-resize25", stage : "release-position",
 						dx : dx, dy : dy
 					};
 				}
