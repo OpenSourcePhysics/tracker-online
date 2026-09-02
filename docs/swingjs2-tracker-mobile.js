@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260901-resize19",
+			version: "20260901-resize20",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14491,11 +14491,18 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var finishTouchResize = function(xye) {
 			var root = tag.parentNode;
 			var frame = root && root.ui && root.ui.jc;
-			if (!frame || !frame.getBounds$ || !frame.setSize$II)
+			J2S._trackerResizeStatus = { version : "20260901-resize20", stage : "commit-start" };
+			if (!frame || !frame.getBounds$ || !frame.setSize$II) {
+				J2S._trackerResizeStatus.stage = "frame-unavailable";
 				return false;
+			}
 			var bounds = frame.getBounds$();
 			var width = Math.max(10, bounds.width + xye.dx);
 			var height = Math.max(10, bounds.height + xye.dy);
+			J2S._trackerResizeStatus = {
+				version : "20260901-resize20", stage : "before-set-size",
+				width : width, height : height, dx : xye.dx, dy : xye.dy
+			};
 			var rubberBand = tag.nextSibling;
 			$tag.css("background-color", "red");
 			if (rubberBand) {
@@ -14504,11 +14511,11 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			document.body.style.cursor = "auto";
 			// Resizer normally sets a preferred size, invalidates the full tree, and
 			// packs the window. That pack cycle does not terminate reliably on iPad.
-			// Set the requested size directly and perform one ordinary layout pass.
+			// setSize updates the top-level peer; avoid another validation cycle.
 			frame.setSize$II(width, height);
-			frame.validate$ && frame.validate$();
-			frame.repaint$ && frame.repaint$();
+			J2S._trackerResizeStatus.stage = "after-set-size";
 			$tag.css({ left : (width - 4) + "px", top : (height - 4) + "px" });
+			J2S._trackerResizeStatus.stage = "commit-complete";
 			return true;
 		};
 
