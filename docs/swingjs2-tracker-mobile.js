@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260901-resize16",
+			version: "20260901-resize17",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14486,10 +14486,12 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			});
 		}
 
-		var x, y, dx, dy, pageX0, pageY0, pageX, pageY;
+		var x, y, dx, dy, pageX0, pageY0, pageX, pageY, dragPointerType;
 
 		var down = function(ev) {
 			var ev0 = ev.originalEvent || ev;
+			dragPointerType = ev0.pointerType
+					|| (ev0.targetTouches ? "touch" : "mouse");
 			if ((isResizer || isSliderHandle) && ev0.pointerId != null && tag.setPointerCapture) {
 				try {
 					tag.setPointerCapture(ev0.pointerId);
@@ -14564,13 +14566,23 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				tag.isDragging = false;
 				J2S._dmouseOwner = null
 				if (isNaN(x))return;
-				fUp && fUp({
+				var xye = {
 					x : x,
 					y : y,
 					dx : dx,
 					dy : dy,
 					ev : ev
-				}, 502);
+				};
+				if (fUp && isResizer
+						&& (dragPointerType == "touch" || dragPointerType == "pen")) {
+					// Do not run JFrame.invalidateTree()/repackContainer() inside
+					// Mobile Safari's pointerup dispatch. Completing pointer cleanup
+					// first avoids a WebKit/Swing layout re-entrancy freeze on iPad.
+					setTimeout(function() { fUp(xye, 502); }, 0);
+				} else {
+					fUp && fUp(xye, 502);
+				}
+				dragPointerType = null;
 				return false;
 			} else {
 // if (ev.ev0)
