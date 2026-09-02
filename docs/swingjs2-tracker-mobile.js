@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260901-resize20",
+			version: "20260901-resize21",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14467,6 +14467,8 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		// Enlarge the invisible target inward and reserve the gesture for resizing.
 		var isResizer = (" " + tag.className + " ").indexOf(" swingjs-resizer ") >= 0;
 		var isSliderHandle = (" " + tag.className + " ").indexOf(" ui-j2sslider-handle ") >= 0;
+		var isIPadResizer = isResizer && (/iPad|iPhone|iPod/.test(navigator.userAgent)
+				|| navigator.platform == "MacIntel" && navigator.maxTouchPoints > 1);
 		if (isSliderHandle) {
 			$tag.css({
 				"touch-action" : "none",
@@ -14491,7 +14493,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var finishTouchResize = function(xye) {
 			var root = tag.parentNode;
 			var frame = root && root.ui && root.ui.jc;
-			J2S._trackerResizeStatus = { version : "20260901-resize20", stage : "commit-start" };
+			J2S._trackerResizeStatus = { version : "20260901-resize21", stage : "commit-start" };
 			if (!frame || !frame.getBounds$ || !frame.setSize$II) {
 				J2S._trackerResizeStatus.stage = "frame-unavailable";
 				return false;
@@ -14500,7 +14502,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			var width = Math.max(10, bounds.width + xye.dx);
 			var height = Math.max(10, bounds.height + xye.dy);
 			J2S._trackerResizeStatus = {
-				version : "20260901-resize20", stage : "before-set-size",
+				version : "20260901-resize21", stage : "before-set-size",
 				width : width, height : height, dx : xye.dx, dy : xye.dy
 			};
 			var rubberBand = tag.nextSibling;
@@ -14521,6 +14523,8 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 		var down = function(ev) {
 			var ev0 = ev.originalEvent || ev;
+			if (isIPadResizer)
+				J2S._trackerResizeStatus = { version : "20260901-resize21", stage : "pointer-down" };
 			var pointerType = ev0.pointerType
 					|| (ev0.targetTouches ? "touch" : "mouse");
 			// Once a direct-manipulation event identifies this gesture as touch or
@@ -14609,8 +14613,8 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 					dy : dy,
 					ev : ev
 				};
-				if (fUp && isResizer
-						&& (dragPointerType == "touch" || dragPointerType == "pen")) {
+				if (fUp && (isIPadResizer || isResizer
+						&& (dragPointerType == "touch" || dragPointerType == "pen"))) {
 					setTimeout(function() { finishTouchResize(xye); }, 0);
 				} else {
 					fUp && fUp(xye, 502);
