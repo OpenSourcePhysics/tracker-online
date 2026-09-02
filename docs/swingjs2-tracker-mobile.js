@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260901-resize14",
+			version: "20260901-resize16",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14487,13 +14487,9 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		}
 
 		var x, y, dx, dy, pageX0, pageY0, pageX, pageY;
-		var resizeFrame = 0, pendingResizeEvent = null, resizerTouchDrag = false;
 
 		var down = function(ev) {
 			var ev0 = ev.originalEvent || ev;
-			resizerTouchDrag = isResizer
-					&& (ev0.pointerType == "touch" || ev0.pointerType == "pen"
-							|| ev0.targetTouches && ev0.targetTouches.length);
 			if ((isResizer || isSliderHandle) && ev0.pointerId != null && tag.setPointerCapture) {
 				try {
 					tag.setPointerCapture(ev0.pointerId);
@@ -14526,7 +14522,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			pageX0 = xy.x;
 			pageY0 = xy.y;
 			return false;
-		}, performDrag = function(ev) {
+		}, drag = function(ev) {
 			// we will move the frame's parent node and take the frame along
 			// with it
 			var ev0 = ev.originalEvent || ev.ev0 || ev;
@@ -14541,10 +14537,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				x = pageX0 + (dx = Math.round(ev.pageX) - pageX);
 				y = pageY0 + (dy = Math.round(ev.pageY) - pageY);
 				if (isNaN(x))return;
-				// Updating Resizer's rubber band changes the measured contents of the
-				// frame and can start a WebKit layout feedback loop on iPad. The delta
-				// is still recorded here and fUp applies the resize once on release.
-				if (fDrag && !resizerTouchDrag) {
+				if (fDrag) {
 					fDrag({
 						x : x,
 						y : y,
@@ -14558,34 +14551,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 						$(frame).css({ top : y + 'px', left : x + 'px'})
 				}
 			}
-		}, drag = function(ev) {
-			// Swing frame resizing performs a synchronous layout and repaint. iPadOS
-			// can deliver pointermove events faster than that work can complete, so
-			// retain only the newest position and resize once per display frame.
-			if (isResizer && self.requestAnimationFrame) {
-				pendingResizeEvent = ev;
-				if (!resizeFrame) {
-					resizeFrame = self.requestAnimationFrame(function() {
-						resizeFrame = 0;
-						var pending = pendingResizeEvent;
-						pendingResizeEvent = null;
-						pending && performDrag(pending);
-					});
-				}
-				return false;
-			}
-			return performDrag(ev);
 		}, up = function(ev) {
-			// Apply the last coalesced position before completing the resize.
-			if (resizeFrame) {
-				self.cancelAnimationFrame(resizeFrame);
-				resizeFrame = 0;
-			}
-			if (pendingResizeEvent) {
-				var pending = pendingResizeEvent;
-				pendingResizeEvent = null;
-				performDrag(pending);
-			}
 			var ev0 = ev.originalEvent || ev;
 			if ((isResizer || isSliderHandle) && ev0.pointerId != null && tag.releasePointerCapture) {
 				try {
@@ -14605,7 +14571,6 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 					dy : dy,
 					ev : ev
 				}, 502);
-				resizerTouchDrag = false;
 				return false;
 			} else {
 // if (ev.ev0)
@@ -14621,19 +14586,16 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			return ev;
 		}
 
-		// Avoid handling the same physical slider/resizer gesture as pointer,
-		// compatibility mouse, and touch events. Frame resizing is expensive and
-		// duplicate move streams can overwhelm the Swing layout path on an iPad.
-		var usePointerEvents = (isSliderHandle || isResizer) && self.PointerEvent;
-		$tag.bind(usePointerEvents ? 'pointerdown' : 'pointerdown mousedown touchstart', function(ev) {
+		var useSliderPointerEvents = isSliderHandle && self.PointerEvent;
+		$tag.bind(useSliderPointerEvents ? 'pointerdown' : 'pointerdown mousedown touchstart', function(ev) {
 			return down && down(fixTouch(ev));
 		});
 
-		$tag.bind(usePointerEvents ? 'pointermove' : 'pointermove mousemove touchmove', function(ev) {
+		$tag.bind(useSliderPointerEvents ? 'pointermove' : 'pointermove mousemove touchmove', function(ev) {
 			return drag && drag(fixTouch(ev));
 		});
 
-		$tag.bind(usePointerEvents ? 'pointerup pointercancel' : 'pointerup pointercancel mouseup touchend touchcancel', function(ev) {
+		$tag.bind(useSliderPointerEvents ? 'pointerup pointercancel' : 'pointerup pointercancel mouseup touchend touchcancel', function(ev) {
 			// touchend does not express a position, and we don't use it anyway
 			return up && up(ev);
 		});
