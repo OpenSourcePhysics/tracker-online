@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260901-resize12",
+			version: "20260901-resize13",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14487,6 +14487,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		}
 
 		var x, y, dx, dy, pageX0, pageY0, pageX, pageY;
+		var resizeFrame = 0, pendingResizeEvent = null;
 
 		var down = function(ev) {
 			var ev0 = ev.originalEvent || ev;
@@ -14522,7 +14523,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			pageX0 = xy.x;
 			pageY0 = xy.y;
 			return false;
-		}, drag = function(ev) {
+		}, performDrag = function(ev) {
 			// we will move the frame's parent node and take the frame along
 			// with it
 			var ev0 = ev.originalEvent || ev.ev0 || ev;
@@ -14551,7 +14552,34 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 						$(frame).css({ top : y + 'px', left : x + 'px'})
 				}
 			}
+		}, drag = function(ev) {
+			// Swing frame resizing performs a synchronous layout and repaint. iPadOS
+			// can deliver pointermove events faster than that work can complete, so
+			// retain only the newest position and resize once per display frame.
+			if (isResizer && self.requestAnimationFrame) {
+				pendingResizeEvent = ev;
+				if (!resizeFrame) {
+					resizeFrame = self.requestAnimationFrame(function() {
+						resizeFrame = 0;
+						var pending = pendingResizeEvent;
+						pendingResizeEvent = null;
+						pending && performDrag(pending);
+					});
+				}
+				return false;
+			}
+			return performDrag(ev);
 		}, up = function(ev) {
+			// Apply the last coalesced position before completing the resize.
+			if (resizeFrame) {
+				self.cancelAnimationFrame(resizeFrame);
+				resizeFrame = 0;
+			}
+			if (pendingResizeEvent) {
+				var pending = pendingResizeEvent;
+				pendingResizeEvent = null;
+				performDrag(pending);
+			}
 			var ev0 = ev.originalEvent || ev;
 			if ((isResizer || isSliderHandle) && ev0.pointerId != null && tag.releasePointerCapture) {
 				try {
