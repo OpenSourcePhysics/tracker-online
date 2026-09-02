@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260901-resize22",
+			version: "20260901-resize23",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14504,7 +14504,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var finishTouchResize = function(xye) {
 			var root = tag.parentNode;
 			var frame = root && root.ui && root.ui.jc;
-			J2S._trackerResizeStatus = { version : "20260901-resize22", stage : "commit-start" };
+			J2S._trackerResizeStatus = { version : "20260901-resize23", stage : "commit-start" };
 			if (!frame || !frame.getBounds$ || !frame.setSize$II) {
 				J2S._trackerResizeStatus.stage = "frame-unavailable";
 				return false;
@@ -14513,7 +14513,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			var width = Math.max(10, bounds.width + xye.dx);
 			var height = Math.max(10, bounds.height + xye.dy);
 			J2S._trackerResizeStatus = {
-				version : "20260901-resize22", stage : "before-set-size",
+				version : "20260901-resize23", stage : "before-set-size",
 				width : width, height : height, dx : xye.dx, dy : xye.dy
 			};
 			var rubberBand = tag.nextSibling;
@@ -14535,7 +14535,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var down = function(ev) {
 			var ev0 = ev.originalEvent || ev;
 			if (isIPadResizer) {
-				J2S._trackerResizeStatus = { version : "20260901-resize22", stage : "pointer-down" };
+				J2S._trackerResizeStatus = { version : "20260901-resize23", stage : "pointer-down" };
 				removeCapturedRelease();
 				capturedRelease = function(releaseEvent) {
 					if (J2S._dmouseOwner != tag || !tag.isDragging)
@@ -14588,6 +14588,9 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			}
 			pageX0 = xy.x;
 			pageY0 = xy.y;
+			x = pageX0;
+			y = pageY0;
+			dx = dy = 0;
 			return false;
 		}, drag = function(ev) {
 			// we will move the frame's parent node and take the frame along
@@ -14621,6 +14624,22 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		}, up = function(ev) {
 			removeCapturedRelease();
 			var ev0 = ev.originalEvent || ev;
+			// A captured iPad release can arrive without the last pointermove having
+			// reached the resizer. Derive the final delta from the release itself.
+			if (isIPadResizer) {
+				var releasePoint = ev0.changedTouches && ev0.changedTouches.length
+						? ev0.changedTouches[0] : ev0;
+				if (releasePoint.pageX != null && releasePoint.pageY != null) {
+					dx = Math.round(releasePoint.pageX) - pageX;
+					dy = Math.round(releasePoint.pageY) - pageY;
+					x = pageX0 + dx;
+					y = pageY0 + dy;
+					J2S._trackerResizeStatus = {
+						version : "20260901-resize23", stage : "release-position",
+						dx : dx, dy : dy
+					};
+				}
+			}
 			if ((isResizer || isSliderHandle) && ev0.pointerId != null && tag.releasePointerCapture) {
 				try {
 					tag.releasePointerCapture(ev0.pointerId);
