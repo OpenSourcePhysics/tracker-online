@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260901-resize25",
+			version: "20260901-resize26",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14490,6 +14490,19 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 		var x, y, dx, dy, pageX0, pageY0, pageX, pageY, dragPointerType;
 		var capturedRelease = null;
+		var resizeFrame = null;
+		var setBoundsMethod = "setBounds$I$I$I$I";
+
+		var findResizeFrame = function(node) {
+			for (; node && node != document.body; node = node.parentNode) {
+				var ui = node.ui || node["data-ui"];
+				var component = ui && ui.jc || node["data-component"];
+				if (component && component.getBounds$
+						&& (component.setSize$II || component[setBoundsMethod]))
+					return component;
+			}
+			return null;
+		};
 
 		var removeCapturedRelease = function() {
 			if (!capturedRelease)
@@ -14503,18 +14516,8 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 		var finishTouchResize = function(xye) {
 			var root = tag.parentNode;
-			var frame = null;
-			var setBoundsMethod = "setBounds$I$I$I$I";
-			for (var node = root; node && node != document.body; node = node.parentNode) {
-				var ui = node.ui || node["data-ui"];
-				var component = ui && ui.jc || node["data-component"];
-				if (component && component.getBounds$
-						&& (component.setSize$II || component[setBoundsMethod])) {
-					frame = component;
-					break;
-				}
-			}
-			J2S._trackerResizeStatus = { version : "20260901-resize25", stage : "commit-start" };
+			var frame = resizeFrame || findResizeFrame(root);
+			J2S._trackerResizeStatus = { version : "20260901-resize26", stage : "commit-start" };
 			if (!frame || !frame.getBounds$ || !frame.setSize$II) {
 				J2S._trackerResizeStatus.stage = "frame-unavailable";
 				return false;
@@ -14523,7 +14526,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			var width = Math.max(10, bounds.width + xye.dx);
 			var height = Math.max(10, bounds.height + xye.dy);
 			J2S._trackerResizeStatus = {
-				version : "20260901-resize25", stage : "before-set-size",
+				version : "20260901-resize26", stage : "before-set-size",
 				width : width, height : height, dx : xye.dx, dy : xye.dy
 			};
 			var rubberBand = tag.nextSibling;
@@ -14542,13 +14545,18 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			J2S._trackerResizeStatus.stage = "after-set-size";
 			$tag.css({ left : (width - 4) + "px", top : (height - 4) + "px" });
 			J2S._trackerResizeStatus.stage = "commit-complete";
+			resizeFrame = null;
 			return true;
 		};
 
 		var down = function(ev) {
 			var ev0 = ev.originalEvent || ev;
 			if (isIPadResizer) {
-				J2S._trackerResizeStatus = { version : "20260901-resize25", stage : "pointer-down" };
+				resizeFrame = findResizeFrame(tag.parentNode);
+				J2S._trackerResizeStatus = {
+					version : "20260901-resize26", stage : "pointer-down",
+					frameFound : !!resizeFrame
+				};
 				removeCapturedRelease();
 				capturedRelease = function(releaseEvent) {
 					if (J2S._dmouseOwner != tag || !tag.isDragging)
@@ -14648,7 +14656,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 					x = pageX0 + dx;
 					y = pageY0 + dy;
 					J2S._trackerResizeStatus = {
-						version : "20260901-resize25", stage : "release-position",
+						version : "20260901-resize26", stage : "release-position",
 						dx : dx, dy : dy
 					};
 				}
