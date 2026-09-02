@@ -12505,7 +12505,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var setLongPressStatus = function(stage, details) {
 		J2S._trackerLongPressStatus = {
-			version: "20260901-resize13",
+			version: "20260901-resize14",
 			stage: stage,
 			time: Date.now(),
 			details: details || null
@@ -14487,10 +14487,13 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		}
 
 		var x, y, dx, dy, pageX0, pageY0, pageX, pageY;
-		var resizeFrame = 0, pendingResizeEvent = null;
+		var resizeFrame = 0, pendingResizeEvent = null, resizerTouchDrag = false;
 
 		var down = function(ev) {
 			var ev0 = ev.originalEvent || ev;
+			resizerTouchDrag = isResizer
+					&& (ev0.pointerType == "touch" || ev0.pointerType == "pen"
+							|| ev0.targetTouches && ev0.targetTouches.length);
 			if ((isResizer || isSliderHandle) && ev0.pointerId != null && tag.setPointerCapture) {
 				try {
 					tag.setPointerCapture(ev0.pointerId);
@@ -14538,7 +14541,10 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				x = pageX0 + (dx = Math.round(ev.pageX) - pageX);
 				y = pageY0 + (dy = Math.round(ev.pageY) - pageY);
 				if (isNaN(x))return;
-				if (fDrag) {
+				// Updating Resizer's rubber band changes the measured contents of the
+				// frame and can start a WebKit layout feedback loop on iPad. The delta
+				// is still recorded here and fUp applies the resize once on release.
+				if (fDrag && !resizerTouchDrag) {
 					fDrag({
 						x : x,
 						y : y,
@@ -14599,6 +14605,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 					dy : dy,
 					ev : ev
 				}, 502);
+				resizerTouchDrag = false;
 				return false;
 			} else {
 // if (ev.ev0)
