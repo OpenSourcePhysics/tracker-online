@@ -10686,6 +10686,8 @@ return jQuery;
 })(jQuery,document,"click mousemove mouseup touchmove touchend", "outjsmol");
 // j2sApplet.js BH = Bob Hanson hansonr@stolaf.edu
 
+// BH 2026.08.23 adds css touch-action none for resizer
+// BH 2025.10.28 moves template.html getClassList to here as J2S.getClassList(optionalName)
 // BH 2025.10.15 allowing ../../.... at the start of Info.j2sPath
 // BH 2025.08.16 allow loading file:/// from current directory
 // BH 2025.04.20 adds Info.coreAssets:"coreAssets.zip"
@@ -13048,6 +13050,11 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	var __profiling;
 
+	J2S.getClassList = function(name){
+		name || (name = '_j2sclasslist.txt');
+		J2S._saveFile(name, Clazz.ClassFilesLoaded.sort().join('\n'));
+	}
+
 	J2S.getProfile = function(doProfile) {
 		if (__profiling || arguments.length == 1 && !doProfile) {
 			var s = Clazz.getProfile();
@@ -13960,9 +13967,32 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 		tag._isDragger = true;
 
+		// The SwingJS window resizer is normally a 10-by-10 transparent mouse
+		// target. That target is too small for a finger or Apple Pencil, and with
+		// the default touch action iPadOS may take over the drag for page panning.
+		// Enlarge the invisible target inward and reserve the gesture for resizing.
+		var isResizer = (" " + tag.className + " ").indexOf(" swingjs-resizer ") >= 0;
+		if (isResizer) {
+			$tag.css({
+				"width" : "28px",
+				"height" : "28px",
+				"margin-left" : "-18px",
+				"margin-top" : "-18px",
+				"touch-action" : "none",
+				"user-select" : "none",
+				"-webkit-user-select" : "none"
+			});
+		}
+		
 		var x, y, dx, dy, pageX0, pageY0, pageX, pageY;
-
+		var havePointer;
+		
 		var down = function(ev) {
+			if (ev.type.indexOf("pointer")>=0) {
+				havePointer = true;
+			} else if (havePointer) {
+				return false;
+			}
 			J2S._dmouseOwner = tag;
 			J2S._dmouseDrag = drag;
 			J2S._dmouseUp = up;
@@ -13991,6 +14021,9 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			pageY0 = xy.y;
 			return false;
 		}, drag = function(ev) {
+			if (havePointer && ev.type.indexOf("touch")>=0) {
+				return false;
+			}
 			// we will move the frame's parent node and take the frame along
 			// with it
 			var ev0 = ev.ev0 || ev;
@@ -14016,6 +14049,12 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				}
 			}
 		}, up = function(ev) {
+			if (havePointer) {
+				havePointer = false;
+				if (ev.type.indexOf("touch")>=0) {
+					return false;
+				}
+			}
 			J2S._dmouseDrag = null;
 			J2S._dmouseUp = null;
 			if (J2S._dmouseOwner == tag) {
@@ -14208,6 +14247,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 // Google closure compiler cannot handle Clazz.new or Clazz.super
 
+// BH 2026.06.16 fixing x.replace(y,"...$...") not working properly
 // BH 2025.10.16 minimizing missing package.js message
 // BH 2025.04.17 adds option for explicit directory for core files different from j2sPath/core
 // BH 2025.03.12 adds support for writable byte[] parameters in WASM
@@ -20386,7 +20426,14 @@ sp.replace$ = function(c1,c2){
   } else {    
     c1=c1.replace(/([\\\$\.\*\+\|\?\^\{\}\(\)\[\]])/g,function($0,$1){return "\\"+$1;});
   }
-  return this.replace(new RegExp(c1,"gm"),c2);
+	var pt = c2.indexOf("$");
+	var is$ = (pt >= 0 && pt < c2.length - 1);
+	if (is$)
+		c2 = c2.split("$").join("\uFFFD");
+	var ret = this.replace(new RegExp(c1,"gm"),c2);
+	if (is$)
+		ret = ret.split("\uFFFD").join("$");
+	return ret;	
 };
 
 // fastest:
@@ -21226,7 +21273,7 @@ dp.getMinutes$ = dp.getMinutes;
 dp.getMonth$ = dp.getMonth;
 dp.getSeconds$ = dp.getSeconds;
 dp.getTime$ = dp.getTime;
-dp.getTimeZoneOffset$ = dp.getTimeZoneOffset;
+dp.getTimezoneOffset$ = dp.getTimezoneOffset;
 dp.getYear$ = dp.getYear;
 dp.parse$S = dp.parse;
 dp.setDate$I = dp.setDate;
