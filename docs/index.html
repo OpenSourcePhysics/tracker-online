@@ -14,35 +14,12 @@
 	<title>Tracker Online</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<style>
-		#tracker-loading-splash {
-			position: fixed;
-			inset: 0;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			z-index: 2147483647;
-			background: rgba(255, 255, 255, 0.96);
-			color: #1f2937;
-			font: 600 28px/1.5 Arial, Helvetica, sans-serif;
-			text-align: center;
-			transition: opacity 200ms ease;
-		}
-
-		#tracker-loading-splash.tracker-loading-splash-hidden {
-			opacity: 0;
-			pointer-events: none;
-		}
-	</style>
     <link href="./css/tracker_home.css" rel="stylesheet" type="text/css">
-	<!-- <link rel="stylesheet" type="text/css" href="physletsJS.css" /> -->
-	<link rel="stylesheet" type="text/css" href="ipad.css" />
 	<script src="compadre.js"></script>
-	<script src="swingjs2-tracker-mobile.js"></script>
-	<script src="tracker-camera-import.js"></script>
+	<script src="swingjs/swingjs2.js"></script>
 	<script>
 		let mainFrame = undefined;
-		if (!self.SwingJS) alert('swingjs2-tracker-mobile.js was not found. It needs to be in the same directory as ' +
+		if (!self.SwingJS) alert('swingjs2.js was not found. It needs to be in the same directory as ' +
 			document.location.href);
 
 		function initApp() {
@@ -53,8 +30,8 @@
 			//window.addEventListener('resize', centerApp);
 			//centerApp();
 			setTop();
-			TrackerCameraImporter.setTrackerReady();
-			hideLoadingSplash();
+			//TrackerCameraImporter.setTrackerReady();
+			//hideLoadingSplash();
 		}
 
 		function hideLoadingSplash() {
@@ -84,7 +61,7 @@
 		TrackerInfo = {
 			code: null,
 			main: "org.opensourcephysics.cabrillo.tracker.Tracker",
-			core: "swingjs/j2s/core/core_tracker.z.js?v=20260907-tapesync1",
+			core: "_tracker",
 			resourceZip: "misc-assets.zip",
 			assets: { name: "tracker", zipPath: "tracker-assets.zip", classPaths: ["org/opensourcephysics"] },
 			//width: 850,
@@ -98,8 +75,13 @@
 </head>
 
 <body writingsuggestions="false">
-	<div id="tracker-loading-splash" role="status" aria-live="polite">
-		Loading Tracker Online<br>Please wait.
+	<div id="tracker-online-splash" role="status" aria-live="polite"
+		style="position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;background:white;color:#222;text-align:center;font:20px/1.5 Arial,sans-serif;padding:24px;box-sizing:border-box;pointer-events:none;">
+		<img src="./splash_logo.png" alt="" width="508" height="254"
+			style="display:block;width:508px;height:auto;flex-shrink:0;max-width:80%;max-height:50vh;object-fit:contain;margin:0 auto 24px;"
+			onerror="this.onerror=null;this.src='splash_logo.png';" />
+		<div>Loading Tracker Online</div>
+		<div>Please wait.</div>
 	</div>
 	<p align="center"><img src="tracker_online_logo.png" alt="Tracker Online icon"></p>		
 
