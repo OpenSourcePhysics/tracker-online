@@ -10690,6 +10690,8 @@ return jQuery;
 // AI = Wolfgang Christian wochristian@davidson.edu using ChatGPT+AI
 // WC = Wolfgang Christian wochristian@davidson.edu
 
+// AI 2026.11.01 avoiding accidental double tap close with touch interface
+// BH 2026.10.19 fixing POST test for application/json was startsWith('{"') but there can be whitespace 
 // WC 2026.09.23 removing tracker-mobile references
 // AI 2026.09.22 ChatGPT-plus AI-generated touch improvements
 // AI 2026.09.10 ChatGPT-plus AI-generated touch improvements
@@ -11683,9 +11685,9 @@ if (database == "_" && J2S._serverUrl.indexOf("//your.server.here/") >= 0) {
 				info.type = "POST";
 				info.url = fileName.split("?POST?")[0]
 				info.data = fileName.split("?POST?")[1]
-				if (info.data.startsWith('{"')) {
-					info.contentType = "application/json";
-					info.data = info.data.replaceAll("\n", "\\\\n");
+				if (info.data.startsWith('{') && info.data.substring(1).trim().startsWith('"')) {
+				  info.contentType = "application/json";
+				  //info.data = info.data.replaceAll("\n", "\\\\n");
 				}
 			} else {
 				!info.type && (info.type = "GET");
@@ -13006,7 +13008,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 					var menuBarLabel = ev.target && ev.target.closest &&
 						ev.target.closest(".j2s-menuBar-menu");
 					if (!menuBarLabel)
-						who.applet._processEvent(500, xym, ev, who._frameViewer);// MouseEvent.MOUSE_CLICKED
+					who.applet._processEvent(500, xym, ev, who._frameViewer);// MouseEvent.MOUSE_CLICKED
 					J2S._lastTouchClick = {
 						time: Date.now(),
 						target: getTapControl(ev.target)
@@ -22879,14 +22881,3 @@ if (typeof(SwingJS) == "undefined") {
 })(SwingJS, jQuery, J2S);
 
 } // SwingJS undefined
-
-// Menu labels are controls, not selectable page text. Keep this scoped so
-// Library Browser search fields and resource descriptions can still be copied.
-(function() {
- var style = document.createElement("style");
- style.id = "swingjs-menu-touch-style";
- style.textContent = ".j2s-menuBar-menu, .j2s-menuBar-menu *, .ui-j2smenu, .ui-j2smenu * {" +
-  "-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}" +
-  ".j2s-menuBar-menu {touch-action:manipulation;}";
- document.head.appendChild(style);
-})();
