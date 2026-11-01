@@ -12456,7 +12456,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 	J2S._firstTouch; // three-position switch: undefined, true, false
 
 	var getTapControl = function(target) {
-		return target && target.closest ? target.closest(".j2sbutton") || target : target;
+		return target && target.closest ? target.closest(".j2sbutton, .j2s-menuBar-menu") || target : target;
 	};
 
 	var isTouchPointerEvent = function(ev) {
@@ -12618,6 +12618,12 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 	};
 
 	var prepareTouchContext = function(who, ev) {
+		// A menu-bar press opens its menu directly; it must not also become a
+		// delayed secondary/context press while the finger is held down.
+		if (ev.target && ev.target.closest && ev.target.closest(".j2s-menuBar-menu")) {
+			clearTouchContext(who);
+			return null;
+		}
 		var isTouch = isTouchEvent(ev);
 		// A physical trackpad press reaches us as mousedown, whereas a touch
 		// screen uses pointerdown/touchstart. Both primary-button gestures can
@@ -12996,7 +13002,11 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				// their menus from MouseEvent.MOUSE_CLICKED, so press/release alone
 				// leaves them inert. Complete a non-gesture tap with one Java click.
 				if (completesTouchTap && isTouchTap && who.applet) {
-					who.applet._processEvent(500, xym, ev, who._frameViewer);// MouseEvent.MOUSE_CLICKED
+					// JMenu opens on press. An extra click toggles it closed again.
+					var menuBarLabel = ev.target && ev.target.closest &&
+						ev.target.closest(".j2s-menuBar-menu");
+					if (!menuBarLabel)
+						who.applet._processEvent(500, xym, ev, who._frameViewer);// MouseEvent.MOUSE_CLICKED
 					J2S._lastTouchClick = {
 						time: Date.now(),
 						target: getTapControl(ev.target)
@@ -22869,3 +22879,14 @@ if (typeof(SwingJS) == "undefined") {
 })(SwingJS, jQuery, J2S);
 
 } // SwingJS undefined
+
+// Menu labels are controls, not selectable page text. Keep this scoped so
+// Library Browser search fields and resource descriptions can still be copied.
+(function() {
+ var style = document.createElement("style");
+ style.id = "swingjs-menu-touch-style";
+ style.textContent = ".j2s-menuBar-menu, .j2s-menuBar-menu *, .ui-j2smenu, .ui-j2smenu * {" +
+  "-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}" +
+  ".j2s-menuBar-menu {touch-action:manipulation;}";
+ document.head.appendChild(style);
+})();
