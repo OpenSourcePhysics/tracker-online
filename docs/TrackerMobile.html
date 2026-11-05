@@ -4,7 +4,7 @@
 <head>
 	<title>Tracker JS</title>
 	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<style>
 		#tracker-loading-splash {
 			position: fixed;
@@ -28,13 +28,11 @@
 	<link href="./css/tracker_home.css" rel="stylesheet" type="text/css">
 	<link rel="stylesheet" type="text/css" href="ipad.css" />
 	<script src="compadre.js"></script>
-	<script src="swingjs/swingjs2.js"></script>
-<script src="precache-manifest.js"></script>
-<script src="pwa-bootstrap.js"></script>
-	
+	<script src="swingjs2-tracker-mobile.js?v=20260907-framekeyboard1"></script>
+	<script src="tracker-camera-import.js?v=20260906-toolbar1"></script>
 	<script>
 		let mainFrame = undefined;
-		if (!self.SwingJS) alert('swingjs/swingjs2.js was not found. It needs to be in the same directory as ' +
+		if (!self.SwingJS) alert('swingjs2-tracker-mobile.js was not found. It needs to be in the same directory as ' +
 			document.location.href);
 
 		function initApp() {
@@ -44,7 +42,7 @@
 			}
 			window.addEventListener('resize', centerApp);
 			centerApp();
-			
+			TrackerCameraImporter.setTrackerReady();
 			hideLoadingSplash();
 		}
 
@@ -63,7 +61,7 @@
 			let trackerWidth=parseInt(0.9*window.innerWidth,10);    // 90% 
 			let trackerMargin=parseInt(0.05*window.innerWidth,10);  //5%
 		    let trackerHeight=parseInt(0.8*(window.innerHeight-80),10);
-			Tracker.app.getMainFrame$().setBounds$I$I$I$I(trackerMargin, 80,trackerWidth, trackerHeight);
+			Tracker.app.getMainFrame().setBounds$I$I$I$I(trackerMargin, 80,trackerWidth, trackerHeight);
 			document.getElementById("myText").style.top= trackerHeight+100 + "px";
 		}
 
@@ -74,7 +72,7 @@
 		TrackerInfo = {
 			code: null,
 			main: "org.opensourcephysics.cabrillo.tracker.Tracker",
-			core: "_tracker",
+			core: "swingjs/j2s/core/core_tracker.z.js?v=20260907-tapesync1",
 			resourceZip: "misc-assets.zip",
 			assets: { name: "tracker", zipPath: "tracker-assets.zip", classPaths: ["org/opensourcephysics"] },
 			width: 850,
@@ -84,29 +82,6 @@
 			console: 'none'
 		}
 	</script>
-	<meta name="description" content="Open Source Physics video analysis and modeling tool for physics education. Track and analyze object motion in videos offline or online.">
-	
-	<!-- PWA Manifest & Theme Settings -->
-	<link rel="manifest" href="manifest.webmanifest">
-	<meta name="theme-color" content="#0066cc">
-	
-	<!-- iOS / Apple Web App Settings -->
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="default">
-	<meta name="apple-mobile-web-app-title" content="Tracker">
-	<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-	<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
-	<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
-
-	<!-- Standard Favicons -->
-	<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
-	<link rel="shortcut icon" href="favicon.ico">
-
-	<!-- PWA Stylesheet and Controller -->
-	<link href="./css/pwa.css" rel="stylesheet" type="text/css">
-	<script src="pwa.js" defer></script>
-
 </head>
 
 <body class="tracker-mobile" writingsuggestions="false">
