@@ -1,0 +1,24 @@
+{
+  "name": "tracker-pwa",
+  "version": "1.0.2",
+  "description": "Progressive Web App (PWA) for Tracker Online - Open Source Physics video analysis and modeling tool",
+  "author": "Open Source Physics / Douglas Brown, Wolfgang Christian, Robert M Hanson",
+  "license": "GPL-3.0",
+  "homepage": "https://opensourcephysics.github.io/tracker-online/",
+  "scripts": {
+    "start": "npx serve . -l 8080",
+    "serve": "python3 -m http.server 8080",
+    "build": "node tools/build-precache.cjs",
+    "check": "node tools/check-pwa.cjs",
+    "test": "node tests/service-worker.test.cjs && node tests/bootstrap.test.cjs && node tests/touch-context.test.cjs"
+  },
+  "keywords": [
+    "tracker",
+    "physics",
+    "video-analysis",
+    "pwa",
+    "progressive-web-app",
+    "swingjs",
+    "open-source-physics"
+  ]
+}
