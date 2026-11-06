@@ -12517,8 +12517,6 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var state = who && who._touchContext;
 		if (state && state.timer)
 			clearTimeout(state.timer);
-		if (state && state.cleanupTimer)
-			clearTimeout(state.cleanupTimer);
 		if (who)
 			who._touchContext = null;
 	};
@@ -12579,13 +12577,9 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			clearTimeout(state.timer);
 			state.timer = null;
 		}
-		// A browser can issue pointercancel for a long hold before it allows the
-		// timer callback to run. Do not leave that cancelled gesture attached to
-		// the canvas after the context action has been delivered.
-		state.cleanupTimer = setTimeout(function() {
-			if (who._touchContext === state)
-				clearTouchContext(who);
-		}, 1000);
+		// Keep ownership until the originating contact ends, however long the
+		// finger remains down. A new press also clears a cancelled/stale gesture
+		// in prepareTouchContext, so no timer may turn this release into a click.
 
 		// Finish the ordinary touch press first. This prevents the selected marker
 		// from being left in a pressed/dragging state before its popup is opened.
@@ -12694,10 +12688,10 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var oe = ev.originalEvent || ev;
 		if (isTouchPointerEvent(ev) && oe.pointerId != null)
 			delete state.pointerIDs[oe.pointerId];
-		if ((ev.type == "pointercancel" || ev.type == "touchcancel") && !state.triggered) {
+		if (ev.type == "pointercancel" || ev.type == "touchcancel") {
 			// Firefox and mobile WebKit can cancel the pointer stream while the
-			// browser is considering a long hold. Preserve the timer so the hold
-			// still becomes the requested context action.
+			// browser is considering a long hold. Preserve the gesture until its
+			// eventual release or the next press, even if its menu is already open.
 			stopTouchEvent(ev);
 			return true;
 		}
@@ -12709,11 +12703,15 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			Object.keys(state.pointerIDs).length;
 		if (!fingersRemain)
 			clearTouchContext(who);
+		oe.j2sContextRelease = true;
 		who.isDown = false;
 		who.isDragging = false;
 		J2S.setMouseOwner(null);
 		if (state.isTouch)
 			J2S._lastTouchPointerUp = Date.now();
+		// The compatibility click follows the physical release, not the timer
+		// that opened the popup; long holds must suppress that same click too.
+		J2S._lastTouchContextMenu = { time: Date.now(), target: getTapControl(state.target) };
 		stopTouchEvent(ev);
 		return true;
 	};
@@ -12911,6 +12909,13 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 	}
 	
 	var mouseUp = function(who, ev) {
+		// A frame can have more than one SwingJS release listener. Once a
+		// context gesture consumes the native release, later listeners must not
+		// turn that same event into a regular Java release/click.
+		if ((ev.originalEvent || ev).j2sContextRelease) {
+			stopTouchEvent(ev);
+			return true;
+		}
 		if (J2S._dmouseOwner && J2S._dmouseOwner.isDragging) {
 		    // resizing mouse released over applet
 			if (J2S._dmouseDrag) {
@@ -12928,8 +12933,10 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			who = J2S._mouseOwner;
 		if (!who || who.applet == null)
 			return;
-		if (!orphanedRelease && ev.type == "mouseup" && isCompatibilityMouseEvent(ev))
+		if (!orphanedRelease && ev.type == "mouseup" && isCompatibilityMouseEvent(ev)) {
+			stopTouchEvent(ev);
 			return true;
+		}
 		if (who._suppressContextMouseUp && ev.type == "mouseup" && ev.button == 0) {
 			who._suppressContextMouseUp = false;
 		who.isDown = false;
@@ -12943,7 +12950,9 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		if (ev.type == "touchend" && J2S._lastTouchPointerUp &&
 			Date.now() - J2S._lastTouchPointerUp < 500) {
 			// pointerup already completed this tap. Ignore the matching legacy
-			// touchend if the browser also delivers it.
+			// touchend if the browser also delivers it. Stop propagation as well:
+			// document-level outside-release handlers must not close the popup.
+			stopTouchEvent(ev);
 			return true;
 		}
 		var completesTouchTap = ev.type == "touchend" || isTouchPointerEvent(ev);
@@ -13172,7 +13181,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 		J2S.$bind(who, 'pointerenter mouseenter', function(ev) { return mouseEnter(who, ev) });
 
-		J2S.$bind(who, 'pointerleave mouseleave', function(ev) { return mouseLeave(who, ev) });
+		J2S.$bind(who, 'pointerout mouseleave', function(ev) { return mouseLeave(who, ev) });
 
 		// context menu is fired on mouse down, not up, and it's handled already
 		// anyway.
@@ -13208,7 +13217,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				+'mouseup pointerup pointercancel touchend touchcancel '
 				+'DOMMouseScroll mousewheel contextmenu '
 				+'mouseleave mouseenter mousemoveoutjsmol '
-				+'pointeleave pointerenter pointermoveoutjsmol ',
+				+'pointerout pointerenter pointermoveoutjsmol ',
 				null);
 		J2S.setMouseOwner(null);
 	}
