@@ -13,63 +13,10 @@
     </script>
 	<title>Tracker Online</title>
 	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="./css/tracker_home.css" rel="stylesheet" type="text/css">
-
-	<meta name="description" content="Open Source Physics video analysis and modeling tool for physics education. Track and analyze object motion in videos offline or online.">
-	
-	<!-- PWA Manifest & Theme Settings -->
-	<link rel="manifest" href="manifest.webmanifest">
-	<meta name="theme-color" content="#0066cc">
-	
-	<!-- iOS / Apple Web App Settings -->
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="default">
-	<meta name="apple-mobile-web-app-title" content="Tracker">
-	<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-	<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
-	<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
-
-	<!-- Standard Favicons -->
-	<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
-	<link rel="shortcut icon" href="favicon.ico">
-
-	<!-- PWA Stylesheet and Controller -->
-	<link href="./css/pwa.css" rel="stylesheet" type="text/css">
-	<script src="pwa.js" defer></script>
-
-</head>
-
-<body writingsuggestions="false">
-	<!-- PWA Navigation and App Bar -->
-	<header class="pwa-header-bar" role="banner">
-		<a href="./index.html" class="pwa-header-brand" aria-label="Tracker Online Home">
-			<img src="icons/icon-96x96.png" alt="Tracker Icon" width="28" height="28" />
-			<span>Tracker Online</span>
-		</a>
-		<div class="pwa-header-actions">
-			<span id="pwa-network-badge" class="pwa-badge pwa-badge-online" title="Network status">Online</span>
-			<button id="pwa-install-btn" class="pwa-btn-install" aria-label="Install Tracker App" style="display:none;">
-				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-				<span>Install App</span>
-			</button>
-		</div>
-	</header>
-	<div id="tracker-online-splash" role="status" aria-live="polite"
-		style="position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;background:white;color:#222;text-align:center;font:20px/1.5 Arial,sans-serif;padding:24px;box-sizing:border-box;pointer-events:none;">
-		<img src="./splash_logo.png" alt="" width="508" height="254"
-			style="display:block;width:508px;height:auto;flex-shrink:0;max-width:80%;max-height:50vh;object-fit:contain;margin:0 auto 24px;"
-			onerror="this.onerror=null;this.src='splash_logo.png';" />
-		<div>Loading Tracker Online</div>
-		<div>Please wait.</div>
-	</div>
-	<p align="center"><img src="tracker_online_logo.png" alt="Tracker Online icon"></p>		
-
 	<script src="compadre.js"></script>
 	<script src="swingjs/swingjs2.js"></script>
-<script src="precache-manifest.js"></script>
-<script src="pwa-bootstrap.js"></script>
 	<script>
 		let mainFrame = undefined;
 		if (!self.SwingJS) alert('swingjs2.js was not found. It needs to be in the same directory as ' +
@@ -83,7 +30,7 @@
 			//window.addEventListener('resize', centerApp);
 			//centerApp();
 			setTop();
-			//
+			//TrackerCameraImporter.setTrackerReady();
 			//hideLoadingSplash();
 		}
 
@@ -125,28 +72,25 @@
 			console: 'none'
 		}
 	</script>
+</head>
+
+<body writingsuggestions="false">
+	<div id="tracker-online-splash" role="status" aria-live="polite"
+		style="position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;background:white;color:#222;text-align:center;font:20px/1.5 Arial,sans-serif;padding:24px;box-sizing:border-box;pointer-events:none;">
+		<img src="./splash_logo.png" alt="" width="508" height="254"
+			style="display:block;width:508px;height:auto;flex-shrink:0;max-width:80%;max-height:50vh;object-fit:contain;margin:0 auto 24px;"
+			onerror="this.onerror=null;this.src='splash_logo.png';" />
+		<div>Loading Tracker Online</div>
+		<div>Please wait.</div>
+	</div>
+	<p align="center"><img src="tracker_online_logo.png" alt="Tracker Online icon"></p>		
 
 	<script>
 		SwingJS.getApplet('Tracker', TrackerInfo);
 	</script>
 
 	<div id = "pagetext" style="position:absolute;left:10px;top:820px;">
-	<section id="pwa-browser-welcome" aria-labelledby="pwa-browser-title">
-      <h2 id="pwa-browser-title">Welcome to Tracker Online</h2>
-      <p>Analyze motion in videos, track objects, and build physics models right in your browser. Open a Tracker project or a video to get started.</p>
-      <p>Install Tracker on your computer, phone, or tablet for an app window of its own. Use Install App when available, or your browser’s installation menu. On iPhone or iPad, use Share &gt; Add to Home Screen.</p>
-      <p>Keep your first visit online until the app finishes preparing its offline resources. After that, you can reopen Tracker and work with local files offline. Online collections and remote videos still need internet.</p>
-    </section>
-    <section id="pwa-installed-welcome" aria-labelledby="pwa-installed-title" hidden>
-      <h2 id="pwa-installed-title">Welcome back to Tracker</h2>
-      <p id="pwa-desktop-guidance">Choose File &gt; Open File to open a Tracker project or video, or drag a file onto Tracker.</p>
-      <p id="pwa-mobile-guidance" hidden>Tap File &gt; Open File to select a Tracker project or video from your device. Use Video &gt; Capture to record a new video when camera access is available.</p>
-      <p>You can work with local files offline once the app’s resources are cached. Online collections and remote videos need internet.</p>
-      <p>Save your project before closing Tracker. Your work is not saved automatically.</p>
-    </section>
-    <details id="pwa-about" open>
-    <summary>Using Tracker Online · video formats · help and credits</summary>
-    <p><strong>Using Tracker Online:</strong> To maximize Tracker, click the blue up-facing triangle at the right end of the toolbar. 
+	<p><strong>Using Tracker Online:</strong> To maximize Tracker, click the blue up-facing triangle at the right end of the toolbar. 
 		To open a Tracker project (TRZ), Tracker tab (TRK), or video file:</p>
 		<ul>
 		  <li>Drag and drop the file from your desktop onto Tracker Online.</li>
@@ -174,7 +118,6 @@
 			href="https://chemapps.stolaf.edu/swingjs/site/swingjs/examples/about.html">SwingJS </a> system
 		developed by Hanson and his students at St. Olaf College.
 	</p>
-    </details>
 	</div>
 </body>
 
