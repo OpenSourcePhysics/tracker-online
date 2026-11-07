@@ -4,10 +4,12 @@
 <head>
 	<title>Data Tool Online</title>
 	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" type="text/css" href="https://opensourcephysics.github.io/tracker-website/css/library.css" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<link rel="stylesheet" type="text/css" href="css/library.css" />
 	<script src="compadre.js"></script>
-	<script src="swingjs2-tracker-mobile.js"></script>
+	<script src="swingjs/swingjs2.js"></script>
+<script src="precache-manifest.js"></script>
+<script src="pwa-bootstrap.js"></script>
 	<script>
 		if (!self.SwingJS) alert('swingjs2.js was not found. It needs to be in swingjs folder in the same directory as ' +
 			document.location.href);
@@ -44,6 +46,29 @@
 
 
 	</script>
+	<meta name="description" content="Open Source Physics video analysis and modeling tool for physics education. Track and analyze object motion in videos offline or online.">
+	
+	<!-- PWA Manifest & Theme Settings -->
+	<link rel="manifest" href="manifest.webmanifest">
+	<meta name="theme-color" content="#0066cc">
+	
+	<!-- iOS / Apple Web App Settings -->
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="Tracker">
+	<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
+
+	<!-- Standard Favicons -->
+	<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+	<link rel="shortcut icon" href="favicon.ico">
+
+	<!-- PWA Stylesheet and Controller -->
+	<link href="./css/pwa.css" rel="stylesheet" type="text/css">
+	<script src="pwa.js" defer></script>
+
 </head>
 
 
