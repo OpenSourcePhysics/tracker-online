@@ -6,6 +6,29 @@
   let standalone = standaloneMode.matches || navigator.standalone === true;
   if (standalone) document.documentElement.classList.add('pwa-standalone');
   const appleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  const macSafari = !appleMobile && /Macintosh/.test(navigator.userAgent)
+    && /Safari\//.test(navigator.userAgent)
+    && !/Chrome|Chromium|Edg|OPR|Firefox/.test(navigator.userAgent);
+  let dockBanner;
+  let dockBannerDismissed = false;
+  function dockInstructions() {
+    if (!macSafari || standalone || dockBannerDismissed) {
+      if (dockBanner) dockBanner.remove();
+      dockBanner = null;
+      return;
+    }
+    if (dockBanner) return;
+    dockBanner = toast('To install Tracker on your Mac, choose File → Add to Dock in Safari.', true);
+    dockBanner.id = 'pwa-dock-instructions';
+    const dismiss = document.createElement('button');
+    dismiss.type = 'button';
+    dismiss.textContent = 'Dismiss';
+    dismiss.onclick = () => {
+      dockBannerDismissed = true;
+      dockInstructions();
+    };
+    dockBanner.append(dismiss);
+  }
   function toast(message, persistent = false) {
     const item = document.createElement('div');
     item.className = 'pwa-toast pwa-toast-info';
@@ -19,6 +42,22 @@
     const button = document.getElementById('pwa-install-btn');
     if (!button) return;
     if (standalone) { button.style.display = 'none'; return; }
+    button.style.display = 'none';
+    button.title = '';
+    button.setAttribute('aria-label', 'Install Tracker App');
+    const label = button.querySelector('span:last-child');
+    if (label) label.textContent = 'Install App';
+    if (macSafari) {
+      button.style.display = 'inline-flex';
+      button.title = 'Choose File → Add to Dock in Safari';
+      button.setAttribute('aria-label', 'Show Safari installation instructions');
+      if (label) label.textContent = 'How to Install';
+      button.onclick = () => {
+        dockBannerDismissed = false;
+        dockInstructions();
+      };
+      return;
+    }
     if (installPrompt || appleMobile) {
       button.style.display = 'inline-flex';
       button.onclick = async () => {
@@ -60,10 +99,16 @@
       if (narrativeMode !== standalone) document.getElementById('pwa-about').open = !standalone;
       narrativeMode = standalone;
     }
+    const guidance = document.getElementById('pwa-install-guidance');
+    if (guidance && macSafari) {
+      guidance.textContent = 'To give Tracker its own app window on your Mac, choose File → Add to Dock in Safari (macOS Sonoma or later).';
+    }
     installButton();
+    dockInstructions();
   }
   if (standaloneMode.addEventListener) standaloneMode.addEventListener('change', launchNarrative);
   else if (standaloneMode.addListener) standaloneMode.addListener(launchNarrative);
+  window.addEventListener('pageshow', launchNarrative);
   document.addEventListener('DOMContentLoaded', () => { networkStatus(); launchNarrative(); });
 
   if ('serviceWorker' in navigator && window.isSecureContext) {
