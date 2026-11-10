@@ -10690,6 +10690,7 @@ return jQuery;
 // AI = Wolfgang Christian wochristian@davidson.edu using ChatGPT+AI
 // WC = Wolfgang Christian wochristian@davidson.edu
 
+// AI 2026.11.01 adds applet._isolateWindowGestures(DOMNodes[])
 // AI 2026.11.01 avoiding accidental double tap close with touch interface
 // BH 2026.10.19 fixing POST test for application/json was startsWith('{"') but there can be whitespace 
 // WC 2026.09.23 removing tracker-mobile references
@@ -14640,7 +14641,8 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	J2S.getCaller = function() { return arguments.callee.caller.caller}
 
-	  J2S.Mobile = {
+	
+	J2S.Mobile = {
 
 		closeNumberPad : function() {
 			var pad = document.getElementById("j2s_mobile_number_pad");
@@ -14801,8 +14803,64 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 					ev.stopPropagation();
 					J2S.Mobile.showNumberPad(jc);
 				}, true);
+		},
+		
+		isolateWindowGestures: function(nodes) {
+			try {
+				for (var i = nodes.length; --i >= 0;) {
+					var node = nodes[i];
+				    if (!node || node._tGestureIsolated)
+				    	continue;
+				    node._tGestureIsolated = true;
+				    
+				    // 1. CSS Touch & Overscroll Containment
+				    node.style.touchAction = "none";
+				    node.style.overscrollBehavior = "none";
+				    node.style.webkitUserSelect = "none";
+				    node.style.userSelect = "none";
+				    node.style.webkitTouchCallout = "none";
+				    
+				    // 2. Suppress iOS Safari gesture events (pinch zoom & rotate)
+				    var killGesture = function(e) {
+				      e.preventDefault();
+				      e.stopPropagation();
+				    };
+				    node.addEventListener("gesturestart", killGesture, { passive: false });
+				    node.addEventListener("gesturechange", killGesture, { passive: false });
+				    node.addEventListener("gestureend", killGesture, { passive: false });
+				    
+				    // 3. Prevent multi-touch pinch/pan & stop bubbling to host HTML page
+				    node.addEventListener("touchmove", function(e) {
+				      if (e.touches && e.touches.length > 1) {
+				        e.preventDefault();
+				      }
+				      e.stopPropagation();
+				    }, { passive: false });
+				    
+				    node.addEventListener("touchstart", function(e) {
+				      e.stopPropagation();
+				    }, { passive: false });
+				    
+				    node.addEventListener("touchend", function(e) {
+				      e.stopPropagation();
+				    }, { passive: false });
+				    
+				    // 4. Suppress trackpad pinch-to-zoom (ctrl + wheel)
+				    node.addEventListener("wheel", function(e) {
+				      if (e.ctrlKey) {
+				        e.preventDefault();
+				        e.stopPropagation();
+				      }
+				    }, { passive: false });
+				}
+			} catch (ex) {
+					System.err.println("j2sApplet.js J2S.Mobile.isolateWindowGestures() failed " + ex);
+			} 	
 		}
+			
 	}
+	
+	J2S.isolateWindowGestures = J2S.Mobile.isolateWindowGestures;
 
 })(self.J2S, self.jQuery, window, document);
 // j2sClazz.js 
