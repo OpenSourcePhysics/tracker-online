@@ -1,3 +1,4 @@
+/* Refresh installations that cached the core before the MediaInfo fix was published. */
 // Cache refresh requested 2026-11-07T22:43:02.015444+00:00
 /* Generated asset list/version: node tools/build-precache.cjs */
 importScripts('./precache-manifest.js');
