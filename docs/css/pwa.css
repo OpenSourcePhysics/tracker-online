@@ -190,3 +190,9 @@ body.pwa-standalone #header {
 #pagetext h2 { font: 600 1.25rem/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 #pagetext details > summary { cursor: pointer; font-weight: 600; margin: 1em 0; }
 #pagetext [hidden] { display: none !important; }
+
+/* Make the SwingJS slider thumb easy to see against the track. */
+.swingjs .ui-j2sslider-horizontal[id*="_SliderUI_"] > .ui-j2sslider-handle {
+  background: #0066cc;
+  border-color: #004a99;
+}
