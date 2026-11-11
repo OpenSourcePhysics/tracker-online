@@ -11,6 +11,15 @@ function list(dir) {
     return entry.isDirectory() ? list(name) : [name];
   });
 }
+// SwingJS evaluates MediaInfo as a script, so its default WASM URL can point
+// outside the deployed Tracker directory. Restore the locator after a core rebuild.
+const trackerCorePath = path.join(root, 'swingjs/j2s/core/core_tracker.z.js');
+const trackerCore = fs.readFileSync(trackerCorePath, 'utf8');
+const mediaInfoOptions = 'MediaInfo.mediaInfoFactory({format:"JSON"},';
+const mediaInfoWithLocator = 'MediaInfo.mediaInfoFactory({format:"JSON",locateFile:function(file){return new URL("swingjs/j2s/core/ES6/"+file,document.baseURI).href}},';
+const correctedCore = trackerCore.split(mediaInfoOptions).join(mediaInfoWithLocator);
+if (correctedCore !== trackerCore) fs.writeFileSync(trackerCorePath, correctedCore);
+
 const files = list('').sort();
 const hash = crypto.createHash('sha256');
 for (const file of [...files, 'service-worker.js', 'tools/build-precache.cjs']) hash.update(file).update('\0').update(fs.readFileSync(path.join(root, file)));
