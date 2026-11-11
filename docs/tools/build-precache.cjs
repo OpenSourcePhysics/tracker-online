@@ -17,7 +17,11 @@ const trackerCorePath = path.join(root, 'swingjs/j2s/core/core_tracker.z.js');
 const trackerCore = fs.readFileSync(trackerCorePath, 'utf8');
 const mediaInfoOptions = 'MediaInfo.mediaInfoFactory({format:"JSON"},';
 const mediaInfoWithLocator = 'MediaInfo.mediaInfoFactory({format:"JSON",locateFile:function(file){return new URL("swingjs/j2s/core/ES6/"+file,document.baseURI).href}},';
-const correctedCore = trackerCore.split(mediaInfoOptions).join(mediaInfoWithLocator);
+// Recreating a SwingJS HTML pane clears its DOM. Invalidate the cached HTML
+// before the renderer checks it, so it populates the new body on first open.
+const htmlPaneRebuild = /if\(this\.isHtmlKit\)\{this\.mytext=[\w$]+;this\.isHTML=!0;(?!this\.currentHTML=null;)/g;
+const correctedCore = trackerCore.split(mediaInfoOptions).join(mediaInfoWithLocator)
+  .replace(htmlPaneRebuild, match => match + 'this.currentHTML=null;');
 if (correctedCore !== trackerCore) fs.writeFileSync(trackerCorePath, correctedCore);
 
 const files = list('').sort();
