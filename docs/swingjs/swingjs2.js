@@ -10690,6 +10690,7 @@ return jQuery;
 // AI = Wolfgang Christian wochristian@davidson.edu using ChatGPT+AI
 // WC = Wolfgang Christian wochristian@davidson.edu
 
+// AI 2026.11.11 adds passive,capture to setDraggable for resizer
 // AI 2026.11.01 adds applet._isolateWindowGestures(DOMNodes[])
 // AI 2026.11.01 avoiding accidental double tap close with touch interface
 // BH 2026.10.19 fixing POST test for application/json was startsWith('{"') but there can be whitespace 
@@ -14361,24 +14362,6 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		}
 
 		tag._isDragger = true;
-
-		// The SwingJS window resizer is normally a 10-by-10 transparent mouse
-		// target. That target is too small for a finger or Apple Pencil, and with
-		// the default touch action iPadOS may take over the drag for page panning.
-		// Enlarge the invisible target inward and reserve the gesture for resizing.
-		var isResizer = (" " + tag.className + " ").indexOf(" swingjs-resizer ") >= 0;
-		if (isResizer) {
-			$tag.css({
-				"width" : "28px",
-				"height" : "28px",
-				"margin-left" : "-18px",
-				"margin-top" : "-18px",
-				"touch-action" : "none",
-				"user-select" : "none",
-				"-webkit-user-select" : "none"
-			});
-		}
-		
 		var x, y, dx, dy, pageX0, pageY0, pageX, pageY;
 		var havePointer;
 		
@@ -14478,18 +14461,20 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			return ev;
 		}
 
-		$tag.bind('pointerdown mousedown touchstart', function(ev) {
-			return down && down(fixTouch(ev));
-		});
-
-		$tag.bind('pointermove mousemove touchmove', function(ev) {
-			return drag && drag(fixTouch(ev));
-		});
-
-		$tag.bind('pointerup pointercancel mouseup touchend touchcancel', function(ev) {
-			// touchend does not express a position, and we don't use it anyway
-			return up && up(ev);
-		});
+		var evDown = function(ev) {return down && down(fixTouch(ev));};
+		var evMove = function(ev) {return drag && drag(fixTouch(ev));};
+		var evUp = function(ev) {return up && up(fixTouch(ev));};
+		
+		$tag.bind('pointerdown mousedown', evDown);
+		$tag.bind('pointermove mousemove', evMove);
+		$tag.bind('pointerup pointercancel mouseup', evUp);
+		
+		// suggested by ChatGPT+, overriding document scroll events
+		var capture = {passive:false,capture:true};
+		tag.addEventListener("touchstart", evDown, capture);
+		tag.addEventListener("touchmove", evMove, capture);
+		tag.addEventListener("touchend", evUp, capture);
+		tag.addEventListener("touchcancel", evUp, capture);
 
 		dragBind(true);
 
