@@ -14841,7 +14841,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			} 	
 		}, 
 		
-		saveFileSafely: function(filename, data) {	
+		saveFileSafely: function(filename, data, mediaType) {	
 			var name = filename.substring(filename.lastIndexOf("/") + 1);
 			var blob = new Blob([new Uint8Array(data)], {type: mediaType});
 			var url = URL.createObjectURL(blob);
@@ -14889,7 +14889,12 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		
 		setSaveFileSafelyFunction: function(targetPath, mediaType) {
 			if (mediaType != null) {
-				J2S._fileSaveFunction[targetPath] = J2S.Mobile.saveFileSafely
+				J2S._fileSaveFunction[targetPath] = function(fileName, data) { 
+						if (fileName != targetPath) {
+								alert("j2sApplet " + fileName + " != " + targetPath);
+							} 
+						return J2S.Mobile.saveFileSafely(fileName, data, mediaType);
+				};
 			} else {
 				delete J2S._fileSaveFunction[targetPath];
 			}
