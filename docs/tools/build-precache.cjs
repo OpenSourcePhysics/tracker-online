@@ -20,8 +20,11 @@ const mediaInfoWithLocator = 'MediaInfo.mediaInfoFactory({format:"JSON",locateFi
 // Recreating a SwingJS HTML pane clears its DOM. Invalidate the cached HTML
 // before the renderer checks it, so it populates the new body on first open.
 const htmlPaneRebuild = /if\(this\.isHtmlKit\)\{this\.mytext=[\w$]+;this\.isHTML=!0;(?!this\.currentHTML=null;)/g;
+// Ignore document updates delivered after SwingJS detaches the text UI.
+const detachedTextUpdate = /("(?:insertUpdate|removeUpdate|changedUpdate)\$javax_swing_event_DocumentEvent",\s*function\(\w*\)\{)this\.working\|\|/g;
 const correctedCore = trackerCore.split(mediaInfoOptions).join(mediaInfoWithLocator)
-  .replace(htmlPaneRebuild, match => match + 'this.currentHTML=null;');
+  .replace(htmlPaneRebuild, match => match + 'this.currentHTML=null;')
+  .replace(detachedTextUpdate, '$1this.working||!this.ui||!this.ui.c||');
 if (correctedCore !== trackerCore) fs.writeFileSync(trackerCorePath, correctedCore);
 
 const files = list('').sort();
