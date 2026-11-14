@@ -14452,9 +14452,11 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		};
 
 		var fixTouch = function(ev) {
-			if (ev.originalEvent.targetTouches) {
-				ev.pageX = Math.round(ev.originalEvent.targetTouches[0].pageX);
-				ev.pageY = Math.round(ev.originalEvent.targetTouches[0].pageY);
+			var original = ev.originalEvent || ev;
+			var touch = (original.changedTouches || original.targetTouches || [])[0];
+			if (touch && ev.originalEvent) {
+				ev.pageX = Math.round(touch.pageX);
+				ev.pageY = Math.round(touch.pageY);
 			}
 			return ev;
 		}
