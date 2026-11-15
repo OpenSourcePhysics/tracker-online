@@ -10690,6 +10690,7 @@ return jQuery;
 // AI = Wolfgang Christian wochristian@davidson.edu using ChatGPT+AI
 // WC = Wolfgang Christian wochristian@davidson.edu
 
+// BH 2026.11.15 fixes missing jQuery event wrapper in setDraggable()
 // AI 2026.11.11 adds passive,capture to setDraggable for resizer
 // AI 2026.11.01 adds applet._isolateWindowGestures(DOMNodes[])
 // AI 2026.11.01 avoiding accidental double tap close with touch interface
@@ -14452,11 +14453,9 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		};
 
 		var fixTouch = function(ev) {
-			var original = ev.originalEvent || ev;
-			var touch = (original.changedTouches || original.targetTouches || [])[0];
-			if (touch && ev.originalEvent) {
-				ev.pageX = Math.round(touch.pageX);
-				ev.pageY = Math.round(touch.pageY);
+			if (ev.originalEvent.targetTouches) {
+				ev.pageX = Math.round(ev.originalEvent.targetTouches[0].pageX);
+				ev.pageY = Math.round(ev.originalEvent.targetTouches[0].pageY);
 			}
 			return ev;
 		}
@@ -14471,10 +14470,10 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		
 		// suggested by ChatGPT+, overriding document scroll events
 		var capture = {passive:false,capture:true};
-		tag.addEventListener("touchstart", evDown, capture);
-		tag.addEventListener("touchmove", evMove, capture);
-		tag.addEventListener("touchend", evUp, capture);
-		tag.addEventListener("touchcancel", evUp, capture);
+		tag.addEventListener("touchstart", function(e){evDown($.Event(e))}, capture);
+		tag.addEventListener("touchmove", function(e){evMove($.Event(e))}, capture);
+		tag.addEventListener("touchend", function(ev){evUp($.Event(ev))}, capture);
+		tag.addEventListener("touchcancel", function(ev){evUp($.Event(ev))}, capture);
 
 		dragBind(true);
 
