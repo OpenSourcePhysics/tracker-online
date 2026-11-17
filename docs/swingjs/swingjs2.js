@@ -14165,7 +14165,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				&& (applet._canvas.width != w || applet._canvas.height != h)) {
 			applet._newCanvas(true);
 			applet._appletPanel
-					.setDisplay$swingjs_api_js_HTML5Canvas(applet._canvas);
+					.setDisplay$swingjs_api_js_DOMNode_HTML5Canvas(applet._canvas);
 		}
 		applet._appletPanel.setScreenDimension$I$I(w, h);
 		var f = function() {
