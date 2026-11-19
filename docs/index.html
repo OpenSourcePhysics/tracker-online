@@ -2,14 +2,53 @@
 <html>
 
 <head>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-177639816-1"></script>
+    <!-- Set this to the GA4 web stream measurement ID (G-...). -->
+    <meta name="tracker-ga4-id" content="G-5Z064PVGSH">
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-    
-      gtag('config', 'UA-177639816-1');
+      function gtag(){window.dataLayer.push(arguments);}
+      (function () {
+        'use strict';
+        const measurementId = document.querySelector('meta[name="tracker-ga4-id"]').content.trim();
+        if (!/^G-[A-Z0-9]+$/.test(measurementId)) {
+          console.warn('[Tracker Analytics] Configure tracker-ga4-id with your GA4 measurement ID.');
+          return;
+        }
+        function displayMode() {
+          if (navigator.standalone === true) return 'standalone';
+          return ['standalone', 'window-controls-overlay', 'minimal-ui', 'fullscreen']
+            .find(mode => window.matchMedia('(display-mode: ' + mode + ')').matches) || 'browser';
+        }
+        function clientOS() {
+          const platform = navigator.userAgentData && navigator.userAgentData.platform || navigator.platform || '';
+          const agent = navigator.userAgent || '';
+          if (/Android/i.test(agent)) return 'Android';
+          if (/iPad|iPhone|iPod/.test(agent) || (/Mac/i.test(platform) && navigator.maxTouchPoints > 1)) return 'iOS';
+          if (/Win/i.test(platform)) return 'Windows';
+          if (/Mac/i.test(platform)) return 'Mac';
+          if (/Linux|X11|BSD|SunOS|Unix/i.test(platform + ' ' + agent)) return 'UNIX';
+          return 'Other';
+        }
+        function track(eventName) {
+          const mode = displayMode();
+          gtag('event', eventName, {
+            send_to: measurementId,
+            page_title: document.title,
+            page_location: location.href,
+            client_os: clientOS(),
+            launch_mode: mode === 'browser' ? 'browser' : 'installed',
+            display_mode: mode
+          });
+        }
+        gtag('js', new Date());
+        gtag('config', measurementId, {send_page_view: false});
+        window.addEventListener('appinstalled', () => track('pwa_install'));
+        document.addEventListener('DOMContentLoaded', () => track('page_view'), {once: true});
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(measurementId);
+        document.head.appendChild(script);
+      })();
     </script>
 	<title>Tracker Online</title>
 	<meta charset="utf-8" />
